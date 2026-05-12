@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupApiMocks, preselectProject } from './fixtures';
+import { apiList, setupApiMocks, preselectProject } from './fixtures';
 
 /**
  * Override AUTH_DISABLED at runtime by injecting window._env_ before the app
@@ -93,7 +93,7 @@ test.describe('Error handling', () => {
 
   test('handles API errors gracefully on modules page', async ({ page }) => {
     await setupApiMocks(page);
-    await page.route('**/api/v1/modules', (route) =>
+    await page.route(apiList('modules'), (route) =>
       route.fulfill({
         status: 500,
         contentType: 'application/json',
@@ -107,7 +107,7 @@ test.describe('Error handling', () => {
 
   test('handles API errors gracefully on stacks page', async ({ page }) => {
     await setupApiMocks(page);
-    await page.route('**/api/v1/stacks', (route) =>
+    await page.route(apiList('stacks'), (route) =>
       route.fulfill({
         status: 500,
         contentType: 'application/json',
@@ -136,7 +136,7 @@ test.describe('Error handling', () => {
 
   test('handles API errors gracefully on providers page', async ({ page }) => {
     await setupApiMocks(page);
-    await page.route('**/api/v1/providers', (route) =>
+    await page.route(apiList('providers'), (route) =>
       route.fulfill({
         status: 500,
         contentType: 'application/json',

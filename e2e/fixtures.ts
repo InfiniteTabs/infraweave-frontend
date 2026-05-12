@@ -45,13 +45,17 @@ function json(route: Route, data: unknown, status = 200) {
   });
 }
 
+export function apiList(path: string) {
+  return new RegExp(`/api/v1/${path}(?:\\?.*)?$`);
+}
+
 /**
  * Set up all common API route mocks on the given page.
  * Call this in beforeEach or at the start of each test.
  */
 export async function setupApiMocks(page: Page) {
   // Projects
-  await page.route('**/api/v1/projects', (r) => json(r, mockProjects));
+  await page.route(apiList('projects'), (r) => json(r, mockProjects));
 
   // Deployments list
   await page.route('**/api/v1/deployments/**', (r) => json(r, mockDeployments));
@@ -93,8 +97,13 @@ export async function setupApiMocks(page: Page) {
     }),
   );
 
+  // Deployment change history
+  await page.route('**/api/v1/change_records/**', (r) => json(r, []));
+  await page.route('**/api/v1/mutations/**', (r) => json(r, []));
+  await page.route('**/api/v1/plans/**', (r) => json(r, []));
+
   // Modules list
-  await page.route('**/api/v1/modules', (r) => json(r, mockModules));
+  await page.route(apiList('modules'), (r) => json(r, mockModules));
 
   // Module versions
   await page.route('**/api/v1/modules/versions/**', (r) => json(r, [mockModules[0]]));
@@ -103,7 +112,7 @@ export async function setupApiMocks(page: Page) {
   await page.route('**/api/v1/module/**', (r) => json(r, mockModules[0]));
 
   // Stacks list
-  await page.route('**/api/v1/stacks', (r) => json(r, mockStacks));
+  await page.route(apiList('stacks'), (r) => json(r, mockStacks));
 
   // Stack versions
   await page.route('**/api/v1/stacks/versions/**', (r) => json(r, [mockStacks[0]]));
@@ -118,7 +127,7 @@ export async function setupApiMocks(page: Page) {
   await page.route('**/api/v1/policy/**', (r) => json(r, mockPolicies[0]));
 
   // Providers list
-  await page.route('**/api/v1/providers', (r) => json(r, mockProviders));
+  await page.route(apiList('providers'), (r) => json(r, mockProviders));
 
   // Provider versions
   await page.route('**/api/v1/providers/versions/**', (r) => json(r, [mockProviders[0]]));

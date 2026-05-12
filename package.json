@@ -26,6 +26,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
     "test:e2e:screenshots": "node scripts/screenshot-report.js && open playwright-screenshots.html",
+    "test:e2e:screenshots:pdf": "node scripts/screenshot-report.js --pdf",
     "tsc": "tsc -p tsconfig.json"
   },
   "dependencies": {
