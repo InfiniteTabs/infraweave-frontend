@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Generates a single-page HTML gallery of all Playwright screenshots from test-results/.
- * Usage: node scripts/screenshot-report.js
- * Output: playwright-screenshots.html
+ * Generates an HTML gallery, and optionally a PDF, of Playwright screenshots from test-results/.
+ * Usage: node scripts/screenshot-report.js [--pdf]
+ * Output: playwright-screenshots.html, optionally playwright-screenshots.pdf
  */
 
 const fs = require('fs');
@@ -10,6 +10,8 @@ const path = require('path');
 
 const TEST_RESULTS_DIR = path.resolve(__dirname, '../test-results');
 const OUTPUT_FILE = path.resolve(__dirname, '../playwright-screenshots.html');
+const PDF_FILE = path.resolve(__dirname, '../playwright-screenshots.pdf');
+const SHOULD_WRITE_PDF = process.argv.includes('--pdf');
 
 function slugToTitle(dirName) {
   // e.g. "stacks-Stack-detail-page-shows-description-chromium"
@@ -22,8 +24,8 @@ function slugToTitle(dirName) {
 
 function collectScreenshots() {
   if (!fs.existsSync(TEST_RESULTS_DIR)) {
-    console.error('No test-results directory found. Run tests first.');
-    process.exit(1);
+    console.warn('No test-results directory found. Writing an empty screenshot report.');
+    return [];
   }
 
   const results = [];
@@ -143,6 +145,37 @@ function buildHtml(screenshots) {
     }
     .card img:hover { opacity: 0.9; }
     .hidden { display: none; }
+    @media print {
+      body {
+        background: #fff;
+        color: #0f172a;
+        padding: 0;
+      }
+      .filter {
+        display: none;
+      }
+      .meta {
+        color: #475569;
+      }
+      .grid {
+        display: block;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        break-inside: avoid;
+        margin-bottom: 1rem;
+      }
+      .card-header {
+        border-bottom: 1px solid #cbd5e1;
+      }
+      .title {
+        color: #1e293b;
+      }
+      .label {
+        color: #64748b;
+      }
+    }
   </style>
 </head>
 <body>
@@ -182,3 +215,30 @@ const screenshots = collectScreenshots();
 const html = buildHtml(screenshots);
 fs.writeFileSync(OUTPUT_FILE, html, 'utf8');
 console.log(`✓ Report written to ${OUTPUT_FILE} (${screenshots.length} screenshots)`);
+
+async function writePdf() {
+  const { chromium } = require('playwright');
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  await page.goto(`file://${OUTPUT_FILE}`, { waitUntil: 'networkidle' });
+  await page.pdf({
+    path: PDF_FILE,
+    format: 'A4',
+    printBackground: true,
+    margin: {
+      top: '12mm',
+      right: '10mm',
+      bottom: '12mm',
+      left: '10mm',
+    },
+  });
+  await browser.close();
+  console.log(`✓ PDF written to ${PDF_FILE}`);
+}
+
+if (SHOULD_WRITE_PDF) {
+  writePdf().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
